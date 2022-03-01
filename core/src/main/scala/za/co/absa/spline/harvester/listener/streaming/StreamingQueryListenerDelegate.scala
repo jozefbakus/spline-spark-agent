@@ -36,11 +36,7 @@ class StreamingQueryListenerDelegate(sparkSession: SparkSession, agent: SplineAg
   }
 
   override def onQueryTerminated(event: StreamingQueryListener.QueryTerminatedEvent): Unit = {
-    sparkSession.streams.get(event.id).exception.foreach { exception =>
-      val incrementalExecution = processQuery(sparkSession.streams.get(event.id))
-      sparkSession.streams.get(event.id).exception
-      agent.handle(incrementalExecution, Left(exception))
-    }
+    // do nothing
   }
 
   override def onQueryProgress(event: StreamingQueryListener.QueryProgressEvent): Unit = {
