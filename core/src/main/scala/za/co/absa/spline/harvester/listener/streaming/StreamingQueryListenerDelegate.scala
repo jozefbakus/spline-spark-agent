@@ -17,12 +17,9 @@
 package za.co.absa.spline.harvester.listener.streaming
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.execution.datasources.v2.WriteToDataSourceV2
-import org.apache.spark.sql.execution.streaming.sources.MicroBatchWriter
 import org.apache.spark.sql.execution.streaming.{FileStreamSink, IncrementalExecution, StreamExecution, StreamingQueryWrapper}
-import org.apache.spark.sql.streaming.{StreamingQuery, StreamingQueryListener, StreamingQueryManager}
+import org.apache.spark.sql.streaming.{StreamingQuery, StreamingQueryListener}
 import za.co.absa.spline.agent.SplineAgent
-import za.co.absa.spline.harvester.plugin.embedded.FileStreamWriter
 
 import java.util.concurrent.TimeUnit
 import scala.annotation.tailrec
@@ -53,20 +50,7 @@ class StreamingQueryListenerDelegate(sparkSession: SparkSession, agent: SplineAg
     query match {
       case se: StreamExecution =>
         se.sink match {
-          case fileStreamSink: FileStreamSink =>
-            val writeFileNode = WriteToDataSourceV2(
-              new MicroBatchWriter(se.lastExecution.currentBatchId, new FileStreamWriter(fileStreamSink)),
-              se.lastExecution.analyzed
-            )
-            new IncrementalExecution(
-              se.lastExecution.sparkSession,
-              writeFileNode,
-              se.lastExecution.outputMode,
-              se.lastExecution.checkpointLocation,
-              se.lastExecution.runId,
-              se.lastExecution.currentBatchId,
-              se.lastExecution.offsetSeqMetadata
-            )
+          case fileStreamSink: FileStreamSink => FileStreamWriter.addWriteFileNode(se, fileStreamSink)
           case _ => se.lastExecution
         }
       case sw: StreamingQueryWrapper => processQuery(sw.streamingQuery)

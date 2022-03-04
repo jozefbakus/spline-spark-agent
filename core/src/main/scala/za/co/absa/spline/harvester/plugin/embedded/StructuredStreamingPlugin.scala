@@ -17,12 +17,9 @@
 package za.co.absa.spline.harvester.plugin.embedded
 
 import org.apache.spark.sql.SaveMode
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.streaming.FileStreamSink
 import org.apache.spark.sql.sources.DataSourceRegister
-import org.apache.spark.sql.sources.v2.writer.streaming.StreamWriter
-import org.apache.spark.sql.sources.v2.writer.{DataWriterFactory, WriterCommitMessage}
 import za.co.absa.commons.reflect.ReflectionUtils.extractFieldValue
 import za.co.absa.commons.reflect.extractors.SafeTypeMatchingExtractor
 import za.co.absa.spline.harvester.builder.SourceIdentifier
@@ -61,9 +58,8 @@ class StructuredStreamingPlugin extends Plugin with ReadNodeProcessing with Writ
             case `_: KafkaStreamWriter`(kafkaStreamWriter) =>
               val topic = extractFieldValue[Option[String]](kafkaStreamWriter, "topic")
               val producerParams = extractFieldValue[Map[String, String]](kafkaStreamWriter, "producerParams")
-              val bootstrapServers = producerParams("bootstrap.servers")
 
-              (SourceIdentifier(Some("kafka"), asURI(topic.get)), SaveMode.Append, query, Map("bootstrap.servers" -> bootstrapServers))
+              (SourceIdentifier(Some("kafka"), asURI(topic.get)), SaveMode.Append, query, producerParams)
 
             case `_: FileStreamWriter`(fileStreamWriter) =>
               val fileStreamSink = extractFieldValue[FileStreamSink](fileStreamWriter, "fileStreamSink")
@@ -94,16 +90,7 @@ object StructuredStreamingPlugin {
     "org.apache.spark.sql.execution.streaming.sources.MicroBatchWriter")
 
   object `_: FileStreamWriter` extends SafeTypeMatchingExtractor[AnyRef](
-    "za.co.absa.spline.harvester.plugin.embedded.FileStreamWriter")
+    "za.co.absa.spline.harvester.listener.streaming.FileStreamWriter")
 
   private def asURI(topic: String) = s"kafka:$topic"
-}
-
-// https://issues.apache.org/jira/browse/SPARK-27484
-class FileStreamWriter(val fileStreamSink: FileStreamSink) extends StreamWriter {
-  override def commit(epochId: Long, messages: Array[WriterCommitMessage]): Unit = {}
-
-  override def abort(epochId: Long, messages: Array[WriterCommitMessage]): Unit = {}
-
-  override def createWriterFactory(): DataWriterFactory[InternalRow] = null
 }
