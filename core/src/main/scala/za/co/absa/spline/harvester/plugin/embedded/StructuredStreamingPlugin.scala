@@ -71,7 +71,7 @@ class StructuredStreamingPlugin extends Plugin with ReadNodeProcessing with Writ
               val fileFormat = extractFieldValue[DataSourceRegister](fileStreamSink, "fileFormat")
               val options = extractFieldValue[Map[String, String]](fileStreamSink, "options")
 
-              (SourceIdentifier(Some(fileFormat.shortName()), asURI(path)), SaveMode.Append, query, options)
+              (SourceIdentifier(Some(fileFormat.shortName()), path), SaveMode.Append, query, options)
           }
       }
   }
