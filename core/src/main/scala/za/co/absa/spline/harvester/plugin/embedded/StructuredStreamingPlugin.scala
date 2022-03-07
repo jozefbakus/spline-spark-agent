@@ -58,8 +58,9 @@ class StructuredStreamingPlugin extends Plugin with ReadNodeProcessing with Writ
             case `_: KafkaStreamWriter`(kafkaStreamWriter) =>
               val topic = extractFieldValue[Option[String]](kafkaStreamWriter, "topic")
               val producerParams = extractFieldValue[Map[String, String]](kafkaStreamWriter, "producerParams")
+              val bootstrapServers = producerParams("bootstrap.servers")
 
-              (SourceIdentifier(Some("kafka"), asURI(topic.get)), SaveMode.Append, query, producerParams)
+              (SourceIdentifier(Some("kafka"), asURI(topic.get)), SaveMode.Append, query, Map("bootstrap.servers" -> bootstrapServers))
 
             case `_: FileStreamWriter`(fileStreamWriter) =>
               val fileStreamSink = extractFieldValue[FileStreamSink](fileStreamWriter, "fileStreamSink")
