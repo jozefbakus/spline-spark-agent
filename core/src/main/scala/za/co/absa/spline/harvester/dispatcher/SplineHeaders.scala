@@ -25,6 +25,7 @@ object SplineHeaders {
 
   // Http specific
   val AcceptRequestEncoding = s"$Prefix-Accept-Request-Encoding"
+  val Timeout = "X-SPLINE-TIMEOUT"
 
   // Kafka specific
   val SplineEntityType = s"$Prefix-Entity-Type"
